@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biesse Support Copilot — Agent Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+
+  :root{
+    --paper:#F2F3EE;
+    --panel:#FFFFFF;
+    --line:#D8DBD1;
+    --line-soft:#E6E8DF;
+    --ink:#1B2420;
+    --ink-muted:#5B655F;
+    --ink-faint:#8B948C;
+
+    --blueprint:#0F5C78;
+    --blueprint-dark:#0A3D50;
+    --blueprint-mid:#177E99;
+    --blueprint-wash-a:#E9F3F5;
+    --blueprint-wash-b:#D9EAEE;
+
+    --amber:#B8752A;
+    --amber-dark:#8A5A1E;
+    --amber-wash-a:#FBF1E2;
+    --amber-wash-b:#F3E1C3;
+
+    --moss:#3F7A54;
+    --moss-dark:#2E5C3E;
+    --moss-wash:#E8F1EA;
+
+    --brick:#AD3D30;
+    --brick-wash:#F6E9E7;
+
+    --radius:12px;
+    --radius-sm:7px;
+  }
+
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(1100px 520px at 88% -6%, #E4EEEC 0%, rgba(228,238,236,0) 60%),
+      radial-gradient(900px 500px at 4% 8%, #F4ECDF 0%, rgba(244,236,223,0) 55%),
+      linear-gradient(165deg, #F5F3ED 0%, #EFF1EA 42%, #E9EFEE 100%);
+    background-attachment:fixed;
+    color:var(--ink);
+    font-family:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size:16px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
+
+  button{ font-family:inherit; cursor:pointer; }
+  button:focus-visible, [tabindex]:focus-visible{
+    outline:2px solid var(--blueprint);
+    outline-offset:2px;
+  }
+/* ---------- Header ---------- */
+  header.console-header{
+    background:linear-gradient(90deg, #FFFFFF 0%, #F3F8F8 100%);
+    border-bottom:1px solid var(--line);
+    padding:14px 24px;
+    display:flex;
+    align-items:center;
+    gap:28px;
+    flex-wrap:wrap;
+  }
+  .brand{ display:flex; align-items:baseline; gap:10px; }
+  .brand .mark{ font-weight:700; font-size:19px; letter-spacing:.01em; color:var(--ink); }
+  .brand .mark span{ color:var(--blueprint); }
+  .brand .sub{ font-size:13px; color:var(--ink-muted); border-left:1px solid var(--line); padding-left:10px; }
+
+  .call-meta{ display:flex; align-items:center; gap:18px; font-size:13.5px; color:var(--ink-muted); }
+  .call-meta .live{ display:flex; align-items:center; gap:7px; color:var(--brick); font-weight:600; }
+  .call-meta .live .pulse{ width:8px;height:8px;border-radius:50%; background:var(--brick); animation:pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:.45; transform:scale(.8); } }
+  .call-meta .timer{ font-family:'IBM Plex Mono',monospace; color:var(--ink); }
+
+  .status-strip{ display:flex; gap:16px; margin-left:auto; font-size:12.5px; color:var(--ink-muted); flex-wrap:wrap; }
+  .status-strip .item{ display:flex; align-items:center; gap:6px; }
+  .status-strip .led{ width:7px;height:7px;border-radius:50%; background:var(--moss); box-shadow:0 0 0 3px var(--moss-wash); transition:all .2s ease; }
+  .status-strip .led.off{ background:#B7BDB2; box-shadow:0 0 0 3px #ECEEE7; }
+
+  /* ---------- Layout: narrow transcript rail + wide center stage ---------- */
+   .console{
+    display:grid;
+    grid-template-columns:320px minmax(0,1fr);
+    gap:18px;
+    padding:16px 24px 86px;
+    max-width:1480px;
+    height:calc(100vh - 62px);
+    min-height:0;
+    margin:0 auto;
+    align-items:stretch;
+  }
+
+  .left-column{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    min-width:0;
+    min-height:0;
+    height:100%;
+  }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+  }
+
+  /* ---------- Transcript rail ---------- */
+  .transcript-rail{
+    background:linear-gradient(180deg,#FBFBF9,#F1F4F3);
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    flex:1;
+    overflow:hidden;
+  }
+  .rail-head{
+    padding:12px 14px;
+    border-bottom:1px solid var(--line-soft);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .rail-head h2{ margin:0; font-size:12.5px; font-weight:600; color:var(--ink-muted); text-transform:none; }
+  .rail-head .listening{ margin-left:auto; display:flex; align-items:center; gap:5px; font-size:11px; color:var(--ink-faint); }
+  .rail-head .listening .pulse{ width:6px;height:6px;border-radius:50%; background:var(--moss); animation:pulse 1.6s ease-in-out infinite; }
+  .rail-head .listening.paused .pulse{ background:#B7BDB2; animation:none; }
+  .replay-btn{
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--ink-muted);
+    font-size:11px;
+    font-weight:500;
+    padding:5px 9px;
+    border-radius:20px;
+    white-space:nowrap;
+  }
+  .replay-btn:hover{ border-color:var(--blueprint); color:var(--blueprint-dark); }
+
+  #transcript{
+    padding:12px 11px;
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+  }
+  .turn{
+    display:flex;
+    flex-direction:column;
+    max-width:92%;
+    opacity:0;
+    transform:translateY(5px);
+    animation:appear .3s ease forwards;
+  }
+  @keyframes appear{ to{ opacity:1; transform:translateY(0); } }
+  .turn.customer{ align-self:flex-start; align-items:flex-start; }
+  .turn.agent{ align-self:flex-end; align-items:flex-end; }
+  .turn .meta{ font-size:10px; color:var(--ink-faint); margin-bottom:3px; display:flex; gap:6px; align-items:center; }
+  .turn .meta .speaker{ font-weight:600; color:var(--ink-muted); }
+  .bubble{ padding:8px 10px; border-radius:10px; font-size:12.5px; line-height:1.45; }
+  .turn.customer .bubble{ background:#EFF1EA; border:1px solid var(--line); border-top-left-radius:3px; color:var(--ink); }
+  .turn.agent .bubble{ background:var(--blueprint-wash-a); border:1px solid #CFE1E6; border-top-right-radius:3px; color:var(--blueprint-dark); }
+
+  .thinking-row{
+    display:none; align-items:center; gap:6px;
+    padding:6px 12px 12px; font-size:11px; color:var(--ink-faint);
+  }
+  .thinking-row.show{ display:flex; }
+  .thinking-dots{ display:flex; gap:3px; }
+  .thinking-dots span{ width:4px;height:4px;border-radius:50%; background:var(--ink-faint); animation:bounce 1s infinite ease-in-out; }
+  .thinking-dots span:nth-child(2){ animation-delay:.15s; }
+  .thinking-dots span:nth-child(3){ animation-delay:.3s; }
+  @keyframes bounce{ 0%,80%,100%{ opacity:.3; } 40%{ opacity:1; } }
+
+  .replay-wrap{
+    padding:0 12px 12px;
+    flex:none;
+  }
+  .replay-wrap .replay-btn{ width:100%; }
+
+  /* ---------- Center stage ---------- */
+  .stage{
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    min-height:0;
+    height:100%;
+  }
+
+  .reveal{ opacity:0; transform:translateY(10px); transition:opacity .45s ease, transform .45s ease; }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+
+  .mini-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+    flex:none;
+  }
+  .mini-card{
+    padding:10px 12px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    border-left:4px solid transparent;
+  }
+  .mini-card .value-wrap{ flex:1; min-width:0; }
+  .mini-card .plain-label{ font-size:12px; color:var(--ink-muted); display:block; margin-bottom:4px; }
+  .mini-card .value-chip{ font-size:15px; font-weight:600; line-height:1.2; }
+  .mini-card .reason{ font-size:10.5px; color:var(--ink-muted); margin-top:3px; line-height:1.3; }
+  .mini-card .badge{
+    flex:none;
+    width:34px;height:34px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:19px;
+  }
+  .mini-card .confidence{ font-size:10.5px; color:var(--ink-faint); font-family:'IBM Plex Mono',monospace; display:block; margin-top:6px; }
+
+  .sentiment-frustrated{
+    background:linear-gradient(155deg, var(--amber-wash-a), var(--amber-wash-b));
+    border-left-color:var(--amber);
+  }
+  .sentiment-frustrated .value-chip{ color:var(--amber-dark); }
+  .sentiment-frustrated .badge{ background:linear-gradient(155deg,#E8B978,var(--amber)); color:#fff; }
+
+  .category-chip{
+    background:linear-gradient(155deg, var(--blueprint-wash-a), var(--blueprint-wash-b));
+    border-left-color:var(--blueprint);
+  }
+  .category-chip .value-chip{ color:var(--blueprint-dark); }
+  .category-chip .badge{ background:linear-gradient(155deg,#4FA1B8,var(--blueprint)); color:#fff; }
+
+  /* ---------- Suggestion hero: the landscape centerpiece ---------- */
+  .suggestion-card{
+    overflow:hidden;
+    box-shadow:0 18px 40px -26px rgba(10,61,80,.35);
+    height:100%;
+    display:flex;
+    flex-direction:column;
+  }
+  .suggestion-head{
+    background:linear-gradient(100deg, var(--blueprint-dark), var(--blueprint-mid) 85%);
+    color:#EAF6F8;
+    padding:14px 20px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .suggestion-head h2{ margin:0; font-size:16px; font-weight:600; }
+  .suggestion-head .tag{
+    font-size:11.5px;
+    padding:3px 10px;
+    border-radius:20px;
+    background:rgba(255,255,255,.14);
+    color:#DCF1F5;
+  }
+
+  .suggestion-placeholder{
+    padding:40px 20px;
+    text-align:center;
+    color:var(--ink-faint);
+    font-size:14px;
+  }
+
+  .suggestion-body{
+    padding:20px 24px;
+    display:grid;
+    grid-template-columns:1.35fr 1fr;
+    gap:28px;
+    flex:1;
+    min-height:0;
+    background:linear-gradient(180deg, #FFFFFF, #FCFBF7);
+  }
+  .col-left, .col-right{ display:flex; flex-direction:column; gap:14px; }
+
+  .sug-block h3{
+    margin:0 0 9px;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--blueprint-dark);
+    text-transform:none;
+  }
+  .sug-block p{ margin:0; font-size:13.5px; color:var(--ink); line-height:1.5; }
+
+  .action-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:7px; }
+  .action-list li{ display:flex; align-items:flex-start; gap:9px; font-size:13px; line-height:1.4; cursor:pointer; }
+  .action-list .check{
+    flex:none; width:20px;height:20px; border-radius:6px;
+    border:1.5px solid var(--line); margin-top:1px;
+    display:flex; align-items:center; justify-content:center;
+    color:transparent; font-size:13px; transition:all .15s ease;
+  }
+  .action-list li.done .check{ background:var(--moss); border-color:var(--moss); color:#fff; }
+  .action-list li.done span.txt{ color:var(--ink-faint); text-decoration:line-through; text-decoration-color:var(--line); }
+  .action-list li:hover .check{ border-color:var(--blueprint); }
+
+  .ask-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:7px; }
+  .ask-list li{ font-size:13px; padding-left:17px; position:relative; color:var(--ink); line-height:1.4; }
+  .ask-list li::before{ content:"?"; position:absolute; left:0; top:0; color:var(--blueprint); font-weight:700; font-size:13px; }
+
+  .source-row{
+    display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-muted);
+    background:linear-gradient(155deg,#F5F6F1,#ECEEE6);
+    border:1px solid var(--line-soft);
+    border-radius:var(--radius-sm);
+    padding:10px 12px;
+  }
+  .source-row .doc-icon{ flex:none; color:var(--blueprint); font-weight:700; }
+  .source-row .pages{ margin-left:auto; font-family:'IBM Plex Mono',monospace; }
+
+  .suggestion-foot{
+    display:flex; align-items:center; gap:12px;
+    padding:13px 22px;
+    border-top:1px solid var(--line-soft);
+    background:linear-gradient(155deg,#F7F8F3,#EFF1E9);
+  }
+  .suggestion-foot .latency{ font-size:11.5px; color:var(--ink-faint); font-family:'IBM Plex Mono',monospace; }
+  .fb-btns{ margin-left:auto; display:flex; gap:8px; }
+  .fb-btn{ background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:6px 13px; font-size:12.5px; color:var(--ink-muted); display:flex; align-items:center; gap:6px; }
+  .fb-btn:hover{ border-color:var(--blueprint); color:var(--blueprint-dark); }
+  .fb-btn.active-up{ background:linear-gradient(155deg,#E8F1EA,#D9EBDF); border-color:var(--moss); color:var(--moss-dark); }
+  .fb-btn.active-down{ background:linear-gradient(155deg,#F6E9E7,#F0D9D6); border-color:var(--brick); color:#7C2C22; }
+
+  /* ---------- Footer control bar: scoped to what the copilot owns ---------- */
+  .control-bar{
+    position:fixed; left:0; right:0; bottom:0;
+    background:linear-gradient(180deg,#FFFFFF,#F6F7F1);
+    border-top:1px solid var(--line);
+    padding:7px 24px 8px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+  }
+  .control-bar .scope-note{ font-size:10.5px; color:var(--ink-faint); }
+  .control-row{ display:flex; align-items:center; gap:14px; }
+
+  .waveform{ display:flex; align-items:center; gap:3px; height:20px; }
+  .waveform span{ width:3px; border-radius:2px; background:linear-gradient(180deg,var(--blueprint-mid),var(--blueprint)); animation:wave 1.1s ease-in-out infinite; }
+  .waveform.paused span{ animation:none; background:#C7CBC0; height:4px !important; }
+  .waveform span:nth-child(1){ height:8px; animation-delay:0s; }
+  .waveform span:nth-child(2){ height:16px; animation-delay:.1s; }
+  .waveform span:nth-child(3){ height:20px; animation-delay:.2s; }
+  .waveform span:nth-child(4){ height:13px; animation-delay:.3s; }
+  .waveform span:nth-child(5){ height:9px; animation-delay:.4s; }
+  @keyframes wave{ 0%,100%{ transform:scaleY(.5); } 50%{ transform:scaleY(1); } }
+
+  .ctrl-btn{
+    display:flex; align-items:center; gap:8px;
+    padding:11px 22px;
+    border-radius:24px;
+    border:1px solid var(--line);
+    background:linear-gradient(180deg,#FFFFFF,#F2F3ED);
+    font-size:14.5px;
+    font-weight:500;
+    color:var(--ink);
+  }
+  .ctrl-btn:hover{ border-color:var(--blueprint); }
+  .ctrl-btn.listening-on{ background:linear-gradient(155deg,var(--blueprint-wash-a),var(--blueprint-wash-b)); border-color:var(--blueprint); color:var(--blueprint-dark); }
+  .ctrl-btn.listening-off{ background:linear-gradient(155deg,var(--amber-wash-a),var(--amber-wash-b)); border-color:var(--amber); color:var(--amber-dark); }
+  .ctrl-icon{ font-size:14px; line-height:1; }
+
+  @media (max-width: 900px){
+    .console{
+      grid-template-columns:240px minmax(0,1fr);
+      padding-left:14px;
+      padding-right:14px;
+    }
+    .status-strip{ display:none; }
+    .suggestion-body{ grid-template-columns:1fr; overflow-y:auto; }
+  }
+
+  @media (max-width: 700px){
+    .console{
+      grid-template-columns:1fr;
+      height:auto;
+      min-height:calc(100vh - 62px);
+    }
+    .left-column{ height:auto; }
+    .transcript-rail{ height:300px; flex:none; }
+    .mini-grid{ grid-template-columns:1fr 1fr; }
+    .stage{ min-height:620px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
+  }
+
+</style>
+</head>
+<body>
+<header class="console-header">
+  <div class="brand">
+    <div class="mark">BIESSE <span>Copilot</span></div>
+    <div class="sub">Support console</div>
+  </div>
+
+  <div class="call-meta">
+    <div class="live"><span class="pulse"></span> On call</div>
+    <div>Agent: <strong class="mono" style="color:var(--ink); font-weight:600;">Marco R.</strong></div>
+    <div class="timer" id="callTimer">00:00</div>
+    <div>Language: <span class="mono">EN</span></div>
+  </div>
+
+  <div class="status-strip" aria-label="System status">
+    <div class="item"><span class="led" id="ledMic"></span>Microphone</div>
+    <div class="item"><span class="led"></span>Transcription</div>
+    <div class="item"><span class="led"></span>Knowledge base</div>
+    <div class="item"><span class="led"></span>AI suggestions</div>
+  </div>
+</header>
+
+<main class="console">
+
+  <!-- LEFT COLUMN: compact live conversation + sentiment/category -->
+  <div class="left-column">
+
+    <aside class="panel transcript-rail">
+      <div class="rail-head">
+        <h2>Live conversation</h2>
+        <div class="listening" id="railListening">
+          <span class="pulse"></span>Listening
+        </div>
+      </div>
+
+      <div id="transcript" aria-live="polite"></div>
+
+      <div class="thinking-row" id="thinkingRow">
+        <div class="thinking-dots"><span></span><span></span><span></span></div>
+        Checking the manuals…
+      </div>
+
+      <div class="replay-wrap">
+        <button class="replay-btn" id="replayBtn">▶ Start live call</button>
+      </div>
+    </aside>
+
+    <div class="mini-grid">
+
+      <div class="panel mini-card reveal sentiment-frustrated" id="sentimentCard">
+        <div class="badge">☒</div>
+        <div class="value-wrap">
+          <span class="plain-label">How the customer sounds</span>
+          <div class="value-chip" id="sentValue">—</div>
+          <p class="reason" id="sentReason"></p>
+          <span class="confidence" id="sentConfidence"></span>
+        </div>
+      </div>
+
+      <div class="panel mini-card reveal category-chip" id="categoryCard">
+        <div class="badge">⚙</div>
+        <div class="value-wrap">
+          <span class="plain-label">What this call is about</span>
+          <div class="value-chip" id="catValue">—</div>
+          <p class="reason" id="catReason"></p>
+          <span class="confidence" id="catConfidence"></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN: dominant Copilot recommendation -->
+  <div class="stage">
+
+    <div class="panel suggestion-card reveal" id="suggestionCard">
+
+      <div class="suggestion-head">
+        <h2>Suggested for you</h2>
+        <span class="tag">From the machine manuals</span>
+      </div>
+
+      <div id="suggestionPlaceholder" class="suggestion-placeholder">
+        Suggestions appear here once the customer finishes explaining the issue.
+      </div>
+
+      <div id="suggestionContent" style="display:none;">
+
+        <div class="suggestion-body">
+
+          <div class="col-left">
+            <div class="sug-block">
+              <h3>Likely issue</h3>
+              <p id="sugSummary"></p>
+            </div>
+
+            <div class="sug-block">
+              <h3>Things to try</h3>
+              <ul class="action-list" id="sugActions"></ul>
+            </div>
+          </div>
+
+          <div class="col-right">
+            <div class="sug-block">
+              <h3>Ask the customer</h3>
+              <ul class="ask-list" id="sugQuestions"></ul>
+            </div>
+
+            <div class="sug-block">
+              <h3>Source</h3>
+              <div class="source-row">
+                <span class="doc-icon">▤</span>
+                <span id="sugSource"></span>
+                <span class="pages" id="sugPages"></span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="suggestion-foot">
+          <span class="latency" id="sugLatency"></span>
+          <div class="fb-btns">
+            <button class="fb-btn" id="fbUp">▲ Helpful</button>
+            <button class="fb-btn" id="fbDown">▼ Not helpful</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<div class="control-bar">
+  <div class="control-row">
+    <div class="waveform" id="waveform"><span></span><span></span><span></span><span></span><span></span></div>
+    <button class="ctrl-btn listening-on" id="listenBtn"><span class="ctrl-icon">●</span> Stop listening</button>
+  </div>
+  <div class="scope-note">Copilot listens alongside your call — muting or ending the call itself is done from your phone or headset.</div>
+</div>
+
+
+<script>
+(function(){
+
+  const API_BASE = 'http://127.0.0.1:8765';
+
+  // Demo call audio is served by the local Python backend.
+  // The browser plays it through the normal Windows playback device,
+  // and WASAPI loopback captures that playback for AssemblyAI.
+  const demoAudio = new Audio(API_BASE + '/demo-audio');
+  demoAudio.preload = 'auto';
+
+  const transcriptEl = document.getElementById('transcript');
+  const thinkingRow = document.getElementById('thinkingRow');
+  const startBtn = document.getElementById('replayBtn');
+  const listenBtn = document.getElementById('listenBtn');
+  const waveform = document.getElementById('waveform');
+  const railListening = document.getElementById('railListening');
+  const ledMic = document.getElementById('ledMic');
+  const timerEl = document.getElementById('callTimer');
+
+  let eventSource = null;
+  let callSeconds = 0;
+  let callTimer = null;
+  let running = false;
+  let turnCount = 0;
+
+  // ---------------------------------------------------------------------------
+  // UI helpers
+  // ---------------------------------------------------------------------------
+
+  function setStatus(connected, listeningText){
+    if (connected) {
+      railListening.innerHTML = '<span class="pulse"></span>' + (listeningText || 'Listening');
+      railListening.classList.remove('paused');
+      ledMic.classList.remove('off');
+    } else {
+      railListening.innerHTML = '<span class="pulse"></span>Ready';
+      railListening.classList.add('paused');
+      ledMic.classList.add('off');
+    }
+  }
+
+  function setRunningState(value){
+    running = value;
+
+    if (value) {
+      startBtn.textContent = '■ End live call';
+      listenBtn.classList.remove('listening-off');
+      listenBtn.classList.add('listening-on');
+      listenBtn.innerHTML = '<span class="ctrl-icon">●</span> Stop listening';
+      waveform.classList.remove('paused');
+      setStatus(true, 'Listening');
+    } else {
+      startBtn.textContent = '▶ Start live call';
+      listenBtn.classList.remove('listening-on');
+      listenBtn.classList.add('listening-off');
+      listenBtn.innerHTML = '<span class="ctrl-icon">○</span> Start listening';
+      waveform.classList.add('paused');
+      setStatus(false, 'Ready');
+      if (callTimer) {
+        clearInterval(callTimer);
+        callTimer = null;
+      }
+    }
+  }
+
+  function startClock(){
+    if (callTimer) clearInterval(callTimer);
+    callSeconds = 0;
+    timerEl.textContent = '00:00';
+    callTimer = setInterval(function(){
+      callSeconds++;
+      const m = String(Math.floor(callSeconds/60)).padStart(2,'0');
+      const s = String(callSeconds%60).padStart(2,'0');
+      timerEl.textContent = m + ':' + s;
+    }, 1000);
+  }
+
+  function resetDashboard(){
+    transcriptEl.innerHTML = '';
+    thinkingRow.classList.remove('show');
+
+    document.getElementById('sentimentCard').classList.remove('in');
+    document.getElementById('categoryCard').classList.remove('in');
+    document.getElementById('suggestionCard').classList.remove('in');
+
+    document.getElementById('suggestionPlaceholder').style.display = 'block';
+    document.getElementById('suggestionContent').style.display = 'none';
+
+    document.getElementById('sentValue').textContent = '—';
+    document.getElementById('catValue').textContent = '—';
+    document.getElementById('sentReason').textContent = '';
+    document.getElementById('catReason').textContent = '';
+    document.getElementById('sentConfidence').textContent = '';
+    document.getElementById('catConfidence').textContent = '';
+
+    document.getElementById('sugSummary').textContent = '';
+    document.getElementById('sugActions').innerHTML = '';
+    document.getElementById('sugQuestions').innerHTML = '';
+    document.getElementById('sugSource').textContent = '';
+    document.getElementById('sugPages').textContent = '';
+    document.getElementById('sugLatency').textContent = '';
+
+    document.getElementById('fbUp').classList.remove('active-up');
+    document.getElementById('fbDown').classList.remove('active-down');
+
+    turnCount = 0;
+  }
+
+  function escapeHtml(value){
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function renderTurn(data){
+    const speaker = data.speaker === 'customer' ? 'customer' : 'agent';
+    const name = speaker === 'customer' ? 'Customer' : 'You';
+
+    turnCount++;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'turn ' + speaker;
+
+    let timeText = data.elapsed_seconds;
+    if (typeof timeText !== 'number') timeText = callSeconds;
+
+    const m = String(Math.floor(timeText / 60)).padStart(2,'0');
+    const s = String(Math.floor(timeText % 60)).padStart(2,'0');
+
+    wrap.innerHTML =
+      '<div class="meta">' +
+        '<span class="speaker">' + name + '</span>' +
+        '<span class="mono">' + m + ':' + s + '</span>' +
+      '</div>' +
+      '<div class="bubble">' + escapeHtml(data.text) + '</div>';
+
+    transcriptEl.appendChild(wrap);
+    transcriptEl.scrollTop = transcriptEl.scrollHeight;
+  }
+
+  function showPartial(data){
+    // We intentionally do not add partial turns to the permanent transcript.
+    // AssemblyAI's final turn becomes the stable chat bubble.
+    thinkingRow.classList.add('show');
+  }
+
+  function hideThinking(){
+    thinkingRow.classList.remove('show');
+  }
+
+  function showAnalysis(data){
+    const sentiment = data.sentiment || {};
+    const category = data.category || {};
+
+    if (sentiment.label) {
+      document.getElementById('sentValue').textContent = sentiment.label;
+      document.getElementById('sentReason').textContent = sentiment.reason || '';
+      document.getElementById('sentConfidence').textContent =
+        sentiment.confidence ? 'Confidence: ' + sentiment.confidence : '';
+      document.getElementById('sentimentCard').classList.add('in');
+    }
+
+    if (category.label) {
+      document.getElementById('catValue').textContent = category.label;
+      document.getElementById('catReason').textContent = category.reason || '';
+      document.getElementById('catConfidence').textContent =
+        category.confidence ? 'Confidence: ' + category.confidence : '';
+      document.getElementById('categoryCard').classList.add('in');
+    }
+  }
+
+  function showSuggestion(data){
+    document.getElementById('suggestionPlaceholder').style.display = 'none';
+    document.getElementById('suggestionContent').style.display = 'block';
+
+    document.getElementById('sugSummary').textContent = data.summary || '';
+
+    const actionList = document.getElementById('sugActions');
+    actionList.innerHTML = '';
+
+    (data.actions || []).forEach(function(action){
+      const li = document.createElement('li');
+      li.innerHTML =
+        '<span class="check">✓</span>' +
+        '<span class="txt">' + escapeHtml(action) + '</span>';
+
+      li.addEventListener('click', function(){
+        li.classList.toggle('done');
+      });
+
+      actionList.appendChild(li);
+    });
+
+    const questionList = document.getElementById('sugQuestions');
+    questionList.innerHTML = '';
+
+    (data.questions || []).forEach(function(question){
+      const li = document.createElement('li');
+      li.textContent = question;
+      questionList.appendChild(li);
+    });
+
+    document.getElementById('sugSource').textContent =
+      data.source || 'Technical reference';
+
+    document.getElementById('sugPages').textContent =
+      data.pages ? 'p. ' + data.pages : '';
+
+    document.getElementById('sugLatency').textContent =
+      data.latency_seconds
+        ? 'Generated in ' + Number(data.latency_seconds).toFixed(1) + 's'
+        : '';
+
+    document.getElementById('suggestionCard').classList.add('in');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Server-Sent Events
+  // ---------------------------------------------------------------------------
+
+  function connectEvents(){
+    if (eventSource) {
+      eventSource.close();
+    }
+
+    eventSource = new EventSource(API_BASE + '/events');
+
+    eventSource.onopen = function(){
+      console.log('Connected to Copilot backend.');
+    };
+
+    eventSource.onmessage = function(event){
+      let data;
+
+      try {
+        data = JSON.parse(event.data);
+      } catch (error) {
+        console.error('Invalid SSE event:', event.data);
+        return;
+      }
+
+      switch(data.type){
+
+        case 'ready':
+          setStatus(false, 'Ready');
+          break;
+
+        case 'status':
+          if (data.message) {
+            console.log('[STATUS]', data.message);
+          }
+          if (data.running !== undefined) {
+            setRunningState(data.running);
+          }
+          break;
+
+        case 'partial':
+          showPartial(data);
+          break;
+
+        case 'turn':
+          hideThinking();
+          renderTurn(data);
+          break;
+
+        case 'analysis':
+          showAnalysis(data);
+          break;
+
+        case 'suggestion':
+          hideThinking();
+          showSuggestion(data);
+          break;
+
+        case 'speaker_revision':
+          // Final speaker corrections can arrive after the conversation.
+          // For now the backend sends corrected labels as a refresh event.
+          console.log('[SPEAKER REVISION]', data);
+          break;
+
+        case 'error':
+          hideThinking();
+          console.error('[BACKEND ERROR]', data.message);
+          alert('Copilot error: ' + (data.message || 'Unknown error'));
+          setRunningState(false);
+          break;
+
+        case 'stopped':
+          hideThinking();
+          setRunningState(false);
+          break;
+      }
+    };
+
+    eventSource.onerror = function(){
+      console.warn('SSE connection interrupted. Backend may not be running.');
+      if (!running) {
+        setStatus(false, 'Backend offline');
+      }
+    };
+  }
+
+  async function startCall(){
+    resetDashboard();
+
+    // IMPORTANT: play() is called directly from the button click path.
+    // This lets the browser's autoplay policy treat it as user initiated.
+    demoAudio.currentTime = 0;
+    const playbackPromise = demoAudio.play();
+
+    try {
+      await playbackPromise;
+
+      const response = await fetch(API_BASE + '/start', {
+        method: 'POST'
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        demoAudio.pause();
+        throw new Error(result.message || 'Could not start call.');
+      }
+
+      setRunningState(true);
+      startClock();
+
+    } catch(error){
+      demoAudio.pause();
+      console.error(error);
+      alert(
+        'Could not start the demo call audio.\n\n' +
+        error.message + '\n\n' +
+        'Make sure main.py is running:\n' +
+        'python main.py'
+      );
+    }
+  }
+
+  async function stopCall(){
+    demoAudio.pause();
+
+    try {
+      await fetch(API_BASE + '/stop', {
+        method: 'POST'
+      });
+    } catch(error){
+      console.error(error);
+    }
+
+    setRunningState(false);
+  }
+
+  // When the prerecorded call finishes, stop the backend too.
+  demoAudio.addEventListener('ended', function(){
+    if (running) {
+      stopCall();
+    }
+  });
+
+  // ---------------------------------------------------------------------------
+  // Buttons
+  // ---------------------------------------------------------------------------
+
+  startBtn.addEventListener('click', function(){
+    if (running) {
+      stopCall();
+    } else {
+      startCall();
+    }
+  });
+
+  listenBtn.addEventListener('click', function(){
+    if (running) {
+      stopCall();
+    } else {
+      startCall();
+    }
+  });
+
+  document.getElementById('fbUp').addEventListener('click', function(){
+    this.classList.add('active-up');
+    document.getElementById('fbDown').classList.remove('active-down');
+  });
+
+  document.getElementById('fbDown').addEventListener('click', function(){
+    this.classList.add('active-down');
+    document.getElementById('fbUp').classList.remove('active-up');
+  });
+
+  // Connect to backend immediately.
+  connectEvents();
+  setRunningState(false);
+
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,11 @@
+conversation_id,category,customer_tone,language,duration_target,scenario,turn_count,customer_turns,agent_turns,word_count
+C01,Machine Operation,Calm,English,2-5 minutes,Customer cannot start an automatic machining program.,32,17,15,547
+C02,Machine Operation,Frustrated,English,2-5 minutes,Customer's machining cycle stops unexpectedly during operation and the machine does not continue the program.,36,18,18,840
+C03,Machine Operation,Confused,English,2-5 minutes,Customer is confused about selecting the correct machining program and preparing the machine to start automatic operation.,39,20,19,826
+C04,Maintenance & Parts,Neutral,English,2-5 minutes,Customer is performing routine machine maintenance and wants to confirm which filter needs to be replaced and how to identify the correct replacement.,34,17,17,710
+C05,Maintenance & Parts,Agitated,English,2-5 minutes,Customer reports that coolant flow is not behaving normally during machining and the issue has repeatedly interrupted production.,36,18,18,732
+C06,Maintenance & Parts,Calm,English,2-5 minutes,Customer notices a maintenance component needs replacement and wants to confirm the correct replacement part and relevant documentation before ordering.,34,17,17,612
+C07,Technical Troubleshooting,Frustrated,English,2-5 minutes,Customer is experiencing repeated spindle overload warnings during a particular machining operation and wants help identifying the cause.,36,18,18,631
+C08,Technical Troubleshooting,Angry,English,2-5 minutes,Customer is angry because a previously reported machine error has returned after they believed the issue had been resolved.,36,18,18,627
+C09,Technical Troubleshooting,Confused,English,2-5 minutes,Customer is confused by a machine communication error that appeared after a computer was replaced.,36,19,17,563
+C10,Technical Troubleshooting,Neutral,English,2-5 minutes,Customer notices inconsistent machining results after installing a replacement tool and wants to determine what should be checked.,34,17,17,527

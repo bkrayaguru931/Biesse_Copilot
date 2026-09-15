@@ -1,0 +1,894 @@
+{
+  "conversation_id": "C01",
+  "ground_truth_file": "C:\\Users\\Babykrishna Rayaguru\\Documents\\Mirai Labs\\Biesse\\biesse_conversation_dataset\\conversations\\c01.json",
+  "assemblyai_file": "C:\\Users\\Babykrishna Rayaguru\\Documents\\Mirai Labs\\Biesse\\biesse_conversation_dataset\\transcripts\\C01_assemblyai.json",
+  "metrics": {
+    "ground_truth_turns": 32,
+    "assemblyai_turns": 63,
+    "aligned_groups": 32,
+    "average_text_similarity": 1.0,
+    "speaker_attribution_accuracy": 1.0,
+    "speaker_evaluable_groups": 32,
+    "pending_or_unknown_turns": 0,
+    "pending_or_unknown_rate": 0.0,
+    "alignment_coverage": 1.0
+  },
+  "speaker_mapping": {
+    "mapping": {
+      "A": "customer",
+      "B": "agent"
+    },
+    "votes": {
+      "A": {
+        "customer": 17,
+        "agent": 0
+      },
+      "B": {
+        "customer": 0,
+        "agent": 15
+      }
+    },
+    "confidence": 1.0
+  },
+  "alignment": [
+    {
+      "ground_truth_turn": {
+        "index": 1,
+        "speaker": "customer",
+        "normalized_speaker": "customer",
+        "text": "Good morning. I'm calling because I'm having a problem starting a machining program."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 1,
+          "speaker": "A",
+          "text": "Good morning!"
+        },
+        {
+          "index": 2,
+          "speaker": "A",
+          "text": "I'm calling because I'm having a problem starting a machining program."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "A",
+        "predicted_role": "customer",
+        "text": "Good morning! I'm calling because I'm having a problem starting a machining program."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 2,
+        "speaker": "agent",
+        "normalized_speaker": "agent",
+        "text": "Good morning. Of course. I'll help you check it. Can you tell me what happens when you try to start the program?"
+      },
+      "assemblyai_turns": [
+        {
+          "index": 3,
+          "speaker": "B",
+          "text": "Good morning!"
+        },
+        {
+          "index": 4,
+          "speaker": "B",
+          "text": "Of course."
+        },
+        {
+          "index": 5,
+          "speaker": "B",
+          "text": "I'll help you check it."
+        },
+        {
+          "index": 6,
+          "speaker": "B",
+          "text": "Can you tell me what happens when you try to start the program?"
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "B",
+        "predicted_role": "agent",
+        "text": "Good morning! Of course. I'll help you check it. Can you tell me what happens when you try to start the program?"
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 3,
+        "speaker": "customer",
+        "normalized_speaker": "customer",
+        "text": "The program is already loaded on the machine. I select it and everything looks normal, but when I try to start the cycle, the machine doesn't do anything."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 7,
+          "speaker": "A",
+          "text": "The program is already loaded on the machine."
+        },
+        {
+          "index": 8,
+          "speaker": "A",
+          "text": "I select it and everything looks normal, but when I try to start the cycle, the machine doesn't do anything."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "A",
+        "predicted_role": "customer",
+        "text": "The program is already loaded on the machine. I select it and everything looks normal, but when I try to start the cycle, the machine doesn't do anything."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 4,
+        "speaker": "agent",
+        "normalized_speaker": "agent",
+        "text": "Okay. Does the machine show any warning, alarm, or message when you try to start the cycle?"
+      },
+      "assemblyai_turns": [
+        {
+          "index": 9,
+          "speaker": "B",
+          "text": "Okay."
+        },
+        {
+          "index": 10,
+          "speaker": "B",
+          "text": "Does the machine show any warning, alarm, or message when you try to start the cycle?"
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "B",
+        "predicted_role": "agent",
+        "text": "Okay. Does the machine show any warning, alarm, or message when you try to start the cycle?"
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 5,
+        "speaker": "customer",
+        "normalized_speaker": "customer",
+        "text": "Yes, there is a message on the screen. It says that the machine is not ready for automatic operation."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 11,
+          "speaker": "A",
+          "text": "Yes, there is a message on the screen."
+        },
+        {
+          "index": 12,
+          "speaker": "A",
+          "text": "It says that the machine is not ready for automatic operation."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "A",
+        "predicted_role": "customer",
+        "text": "Yes, there is a message on the screen. It says that the machine is not ready for automatic operation."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 6,
+        "speaker": "agent",
+        "normalized_speaker": "agent",
+        "text": "Understood. Is the machine currently in automatic mode, or is it still in a manual or setup mode?"
+      },
+      "assemblyai_turns": [
+        {
+          "index": 13,
+          "speaker": "B",
+          "text": "Understood."
+        },
+        {
+          "index": 14,
+          "speaker": "B",
+          "text": "Is the machine currently in automatic mode, or is it still in a manual or setup mode?"
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "B",
+        "predicted_role": "agent",
+        "text": "Understood. Is the machine currently in automatic mode, or is it still in a manual or setup mode?"
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 7,
+        "speaker": "customer",
+        "normalized_speaker": "customer",
+        "text": "Let me check. It is showing automatic mode, so I think that part is correct."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 15,
+          "speaker": "A",
+          "text": "Let me check."
+        },
+        {
+          "index": 16,
+          "speaker": "A",
+          "text": "It is showing automatic mode, so I think that part is correct."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "A",
+        "predicted_role": "customer",
+        "text": "Let me check. It is showing automatic mode, so I think that part is correct."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 8,
+        "speaker": "agent",
+        "normalized_speaker": "agent",
+        "text": "That's good. Apart from the message about automatic operation, do you see any other warnings or indicators on the screen?"
+      },
+      "assemblyai_turns": [
+        {
+          "index": 17,
+          "speaker": "B",
+          "text": "That's good."
+        },
+        {
+          "index": 18,
+          "speaker": "B",
+          "text": "Apart from the message about automatic operation, do you see any other warnings or indicators on the screen?"
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "B",
+        "predicted_role": "agent",
+        "text": "That's good. Apart from the message about automatic operation, do you see any other warnings or indicators on the screen?"
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 9,
+        "speaker": "customer",
+        "normalized_speaker": "customer",
+        "text": "There is a warning symbol in the corner, but I didn't pay much attention to it because the program itself looks fine."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 19,
+          "speaker": "A",
+          "text": "There is a warning symbol in the corner, but I didn't pay much attention to it because the program itself looks fine."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "A",
+        "predicted_role": "customer",
+        "text": "There is a warning symbol in the corner, but I didn't pay much attention to it because the program itself looks fine."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 10,
+        "speaker": "agent",
+        "normalized_speaker": "agent",
+        "text": "That's worth checking. Before we look at the program itself, let's make sure there isn't another machine condition preventing the cycle from starting."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 20,
+          "speaker": "B",
+          "text": "That's worth checking."
+        },
+        {
+          "index": 21,
+          "speaker": "B",
+          "text": "Before we look at the program itself, let's make sure there isn't another machine condition preventing the cycle from starting."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "B",
+        "predicted_role": "agent",
+        "text": "That's worth checking. Before we look at the program itself, let's make sure there isn't another machine condition preventing the cycle from starting."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 11,
+        "speaker": "customer",
+        "normalized_speaker": "customer",
+        "text": "Okay. What should I check?"
+      },
+      "assemblyai_turns": [
+        {
+          "index": 22,
+          "speaker": "A",
+          "text": "Okay."
+        },
+        {
+          "index": 23,
+          "speaker": "A",
+          "text": "What should I check?"
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "A",
+        "predicted_role": "customer",
+        "text": "Okay. What should I check?"
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 12,
+        "speaker": "agent",
+        "normalized_speaker": "agent",
+        "text": "First, please check the machine's safety enclosure or doors and make sure everything is completely closed."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 24,
+          "speaker": "B",
+          "text": "First, please check the machine's safety enclosure or doors and make sure everything is completely closed."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "B",
+        "predicted_role": "agent",
+        "text": "First, please check the machine's safety enclosure or doors and make sure everything is completely closed."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 13,
+        "speaker": "customer",
+        "normalized_speaker": "customer",
+        "text": "One moment. Let me look."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 25,
+          "speaker": "A",
+          "text": "One moment."
+        },
+        {
+          "index": 26,
+          "speaker": "A",
+          "text": "Let me look."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "A",
+        "predicted_role": "customer",
+        "text": "One moment. Let me look."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 14,
+        "speaker": "customer",
+        "normalized_speaker": "customer",
+        "text": "Actually, I see that one of the doors isn't completely closed. It looks like it is closed, but there is a small gap."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 27,
+          "speaker": "A",
+          "text": "Actually, I see that one of the doors isn't completely closed."
+        },
+        {
+          "index": 28,
+          "speaker": "A",
+          "text": "It looks like it is closed, but there is a small gap."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "A",
+        "predicted_role": "customer",
+        "text": "Actually, I see that one of the doors isn't completely closed. It looks like it is closed, but there is a small gap."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 15,
+        "speaker": "agent",
+        "normalized_speaker": "agent",
+        "text": "Okay. That could be relevant because the machine may prevent automatic operation when a required safety condition isn't satisfied."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 29,
+          "speaker": "B",
+          "text": "Okay."
+        },
+        {
+          "index": 30,
+          "speaker": "B",
+          "text": "That could be relevant because the machine may prevent automatic operation when a required safety condition isn't satisfied."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "B",
+        "predicted_role": "agent",
+        "text": "Okay. That could be relevant because the machine may prevent automatic operation when a required safety condition isn't satisfied."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 16,
+        "speaker": "customer",
+        "normalized_speaker": "customer",
+        "text": "I didn't realize that the door position could prevent the program from starting."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 31,
+          "speaker": "A",
+          "text": "I didn't realize that the door position could prevent the program from starting."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "A",
+        "predicted_role": "customer",
+        "text": "I didn't realize that the door position could prevent the program from starting."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 17,
+        "speaker": "agent",
+        "normalized_speaker": "agent",
+        "text": "Yes, it's one of the conditions worth checking when the machine reports that it isn't ready for automatic operation."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 32,
+          "speaker": "B",
+          "text": "Yes, it's one of the conditions worth checking when the machine reports that it isn't ready for automatic operation."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "B",
+        "predicted_role": "agent",
+        "text": "Yes, it's one of the conditions worth checking when the machine reports that it isn't ready for automatic operation."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 18,
+        "speaker": "customer",
+        "normalized_speaker": "customer",
+        "text": "I've closed the door properly now. The warning symbol has disappeared."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 33,
+          "speaker": "A",
+          "text": "I've closed the door properly now."
+        },
+        {
+          "index": 34,
+          "speaker": "A",
+          "text": "The warning symbol has disappeared."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "A",
+        "predicted_role": "customer",
+        "text": "I've closed the door properly now. The warning symbol has disappeared."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 19,
+        "speaker": "agent",
+        "normalized_speaker": "agent",
+        "text": "Great. Does the message saying that the machine isn't ready also disappear?"
+      },
+      "assemblyai_turns": [
+        {
+          "index": 35,
+          "speaker": "B",
+          "text": "Great!"
+        },
+        {
+          "index": 36,
+          "speaker": "B",
+          "text": "Does the message saying that the machine isn't ready also disappear?"
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "B",
+        "predicted_role": "agent",
+        "text": "Great! Does the message saying that the machine isn't ready also disappear?"
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 20,
+        "speaker": "customer",
+        "normalized_speaker": "customer",
+        "text": "Yes, that message is gone as well."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 37,
+          "speaker": "A",
+          "text": "Yes, that message is gone as well."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "A",
+        "predicted_role": "customer",
+        "text": "Yes, that message is gone as well."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 21,
+        "speaker": "agent",
+        "normalized_speaker": "agent",
+        "text": "Good. Before starting the cycle, let's quickly confirm that the intended program is still selected and that there are no other active warnings."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 38,
+          "speaker": "B",
+          "text": "Good."
+        },
+        {
+          "index": 39,
+          "speaker": "B",
+          "text": "Before starting the cycle, let's quickly confirm that the intended program is still selected and that there are no other active warnings."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "B",
+        "predicted_role": "agent",
+        "text": "Good. Before starting the cycle, let's quickly confirm that the intended program is still selected and that there are no other active warnings."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 22,
+        "speaker": "customer",
+        "normalized_speaker": "customer",
+        "text": "The same program is selected, and I don't see any other warnings now."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 40,
+          "speaker": "A",
+          "text": "The same program is selected, and I don't see any other warnings now."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "A",
+        "predicted_role": "customer",
+        "text": "The same program is selected, and I don't see any other warnings now."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 23,
+        "speaker": "agent",
+        "normalized_speaker": "agent",
+        "text": "Okay. You can now try starting the cycle again."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 41,
+          "speaker": "B",
+          "text": "Okay."
+        },
+        {
+          "index": 42,
+          "speaker": "B",
+          "text": "You can now try starting the cycle again."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "B",
+        "predicted_role": "agent",
+        "text": "Okay. You can now try starting the cycle again."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 24,
+        "speaker": "customer",
+        "normalized_speaker": "customer",
+        "text": "All right. I'm starting it now."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 43,
+          "speaker": "A",
+          "text": "All right."
+        },
+        {
+          "index": 44,
+          "speaker": "A",
+          "text": "I'm starting it now."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "A",
+        "predicted_role": "customer",
+        "text": "All right. I'm starting it now."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 25,
+        "speaker": "customer",
+        "normalized_speaker": "customer",
+        "text": "Yes, it's working. The machine has started the program."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 45,
+          "speaker": "A",
+          "text": "Yes, it's working."
+        },
+        {
+          "index": 46,
+          "speaker": "A",
+          "text": "The machine has started the program."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "A",
+        "predicted_role": "customer",
+        "text": "Yes, it's working. The machine has started the program."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 26,
+        "speaker": "agent",
+        "normalized_speaker": "agent",
+        "text": "Excellent. So the program itself wasn't the issue. The machine was preventing automatic operation because one of the required conditions wasn't satisfied."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 47,
+          "speaker": "B",
+          "text": "Excellent."
+        },
+        {
+          "index": 48,
+          "speaker": "B",
+          "text": "So the program itself wasn't the issue."
+        },
+        {
+          "index": 49,
+          "speaker": "B",
+          "text": "The machine was preventing automatic operation because one of the required conditions wasn't satisfied."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "B",
+        "predicted_role": "agent",
+        "text": "Excellent. So the program itself wasn't the issue. The machine was preventing automatic operation because one of the required conditions wasn't satisfied."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 27,
+        "speaker": "customer",
+        "normalized_speaker": "customer",
+        "text": "That makes sense. I was actually going to reload the program because I thought the program had become corrupted."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 50,
+          "speaker": "A",
+          "text": "That makes sense."
+        },
+        {
+          "index": 51,
+          "speaker": "A",
+          "text": "I was actually going to reload the program because I thought the program had become corrupted."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "A",
+        "predicted_role": "customer",
+        "text": "That makes sense. I was actually going to reload the program because I thought the program had become corrupted."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 28,
+        "speaker": "agent",
+        "normalized_speaker": "agent",
+        "text": "I understand. When a cycle doesn't start, it's easy to assume there's a problem with the program. Checking the machine status and any active warnings first can help identify whether the problem is actually related to the program."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 52,
+          "speaker": "B",
+          "text": "I understand."
+        },
+        {
+          "index": 53,
+          "speaker": "B",
+          "text": "When a cycle doesn't start, it's easy to assume there's a problem with the program."
+        },
+        {
+          "index": 54,
+          "speaker": "B",
+          "text": "Checking the machine status and any active warnings first can help identify whether the problem is actually related to the program."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "B",
+        "predicted_role": "agent",
+        "text": "I understand. When a cycle doesn't start, it's easy to assume there's a problem with the program. Checking the machine status and any active warnings first can help identify whether the problem is actually related to the program."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 29,
+        "speaker": "customer",
+        "normalized_speaker": "customer",
+        "text": "I'll remember that. So if I see the machine-not-ready message again, I should first check the machine status and the conditions preventing automatic operation."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 55,
+          "speaker": "A",
+          "text": "I'll remember that."
+        },
+        {
+          "index": 56,
+          "speaker": "A",
+          "text": "So if I see the Machine Not Ready message again, I should first check the machine status and the conditions preventing automatic operation."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "A",
+        "predicted_role": "customer",
+        "text": "I'll remember that. So if I see the Machine Not Ready message again, I should first check the machine status and the conditions preventing automatic operation."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 30,
+        "speaker": "agent",
+        "normalized_speaker": "agent",
+        "text": "Exactly. And if the machine still reports that it isn't ready after those conditions have been checked, note the exact message or alarm and contact support so we can investigate further."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 57,
+          "speaker": "B",
+          "text": "Exactly."
+        },
+        {
+          "index": 58,
+          "speaker": "B",
+          "text": "And if the machine still reports that it isn't ready after those conditions have been checked, note the exact message or alarm and contact support so we can investigate further."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "B",
+        "predicted_role": "agent",
+        "text": "Exactly. And if the machine still reports that it isn't ready after those conditions have been checked, note the exact message or alarm and contact support so we can investigate further."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 31,
+        "speaker": "customer",
+        "normalized_speaker": "customer",
+        "text": "Okay. That clears it up. Thank you for walking me through it."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 59,
+          "speaker": "A",
+          "text": "Okay."
+        },
+        {
+          "index": 60,
+          "speaker": "A",
+          "text": "That clears it up."
+        },
+        {
+          "index": 61,
+          "speaker": "A",
+          "text": "Thank you for walking me through it."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "A",
+        "predicted_role": "customer",
+        "text": "Okay. That clears it up. Thank you for walking me through it."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    },
+    {
+      "ground_truth_turn": {
+        "index": 32,
+        "speaker": "agent",
+        "normalized_speaker": "agent",
+        "text": "You're very welcome. I'm glad we were able to get the machine running again."
+      },
+      "assemblyai_turns": [
+        {
+          "index": 62,
+          "speaker": "B",
+          "text": "You're very welcome."
+        },
+        {
+          "index": 63,
+          "speaker": "B",
+          "text": "I'm glad we were able to get the machine running again."
+        }
+      ],
+      "combined_assemblyai": {
+        "speaker": "B",
+        "predicted_role": "agent",
+        "text": "You're very welcome. I'm glad we were able to get the machine running again."
+      },
+      "text_similarity": 1.0,
+      "speaker_correct": true
+    }
+  ]
+}

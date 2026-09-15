@@ -1,0 +1,402 @@
+{
+  "embedding_model": "gemini-embedding-2",
+  "embedding_dimensions": 1536,
+  "top_k": 3,
+  "total_cases": 10,
+  "top1_relevant": 8,
+  "top1_accuracy": 0.8,
+  "top3_relevant": 8,
+  "top3_recall": 0.8,
+  "cases": [
+    {
+      "id": "C01",
+      "category": "Machine Operation",
+      "query": "The machine will not start the automatic machining program. What should I check?",
+      "top1_relevant": true,
+      "top3_relevant": true,
+      "results": [
+        {
+          "rank": 1,
+          "distance": 0.599503755569458,
+          "source": "ONE_milling_op_man_0722_en-US.pdf",
+          "start_page": 216,
+          "end_page": 218,
+          "section": "218 Operating Manual, 07/2022, A5E48384797B AD",
+          "relevant": true,
+          "matched_groups": 2
+        },
+        {
+          "rank": 2,
+          "distance": 0.619249701499939,
+          "source": "840Dsl_milling_op_man_0721_en-US.pdf",
+          "start_page": 202,
+          "end_page": 207,
+          "section": "7.4 Displaying the current program block",
+          "relevant": true,
+          "matched_groups": 2
+        },
+        {
+          "rank": 3,
+          "distance": 0.6218865513801575,
+          "source": "english---hs-series-service-manual---2001.pdf",
+          "start_page": 6,
+          "end_page": 8,
+          "section": " Check that the machine is level (see \"Installation\" section).",
+          "relevant": false,
+          "matched_groups": 1
+        }
+      ]
+    },
+    {
+      "id": "C02",
+      "category": "Machine Operation",
+      "query": "The machining cycle stops unexpectedly during operation and the machine does not continue the program. What should I check?",
+      "top1_relevant": false,
+      "top3_relevant": false,
+      "results": [
+        {
+          "rank": 1,
+          "distance": 0.5731907486915588,
+          "source": "ONE_milling_op_man_0722_en-US.pdf",
+          "start_page": 216,
+          "end_page": 218,
+          "section": "218 Operating Manual, 07/2022, A5E48384797B AD",
+          "relevant": false,
+          "matched_groups": 2
+        },
+        {
+          "rank": 2,
+          "distance": 0.5816750526428223,
+          "source": "ONE_milling_op_man_0722_en-US.pdf",
+          "start_page": 203,
+          "end_page": 205,
+          "section": "7.5 Correcting a program",
+          "relevant": false,
+          "matched_groups": 2
+        },
+        {
+          "rank": 3,
+          "distance": 0.5886900424957275,
+          "source": "840Dsl_milling_op_man_0721_en-US.pdf",
+          "start_page": 211,
+          "end_page": 213,
+          "section": "7.7 Starting machining at a specific point",
+          "relevant": false,
+          "matched_groups": 2
+        }
+      ]
+    },
+    {
+      "id": "C03",
+      "category": "Machine Operation",
+      "query": "I am confused about selecting the correct machining program and preparing the machine for automatic operation. What should I do?",
+      "top1_relevant": true,
+      "top3_relevant": true,
+      "results": [
+        {
+          "rank": 1,
+          "distance": 0.6226702928543091,
+          "source": "ONE_milling_op_man_0722_en-US.pdf",
+          "start_page": 216,
+          "end_page": 218,
+          "section": "218 Operating Manual, 07/2022, A5E48384797B AD",
+          "relevant": true,
+          "matched_groups": 3
+        },
+        {
+          "rank": 2,
+          "distance": 0.6369982957839966,
+          "source": "840Dsl_milling_op_man_0721_en-US.pdf",
+          "start_page": 202,
+          "end_page": 207,
+          "section": "7.4 Displaying the current program block",
+          "relevant": true,
+          "matched_groups": 3
+        },
+        {
+          "rank": 3,
+          "distance": 0.6413841247558594,
+          "source": "ONE_milling_op_man_0722_en-US.pdf",
+          "start_page": 197,
+          "end_page": 203,
+          "section": "7.4 Displaying the current program block",
+          "relevant": true,
+          "matched_groups": 3
+        }
+      ]
+    },
+    {
+      "id": "C04",
+      "category": "Maintenance & Parts",
+      "query": "I am performing routine machine maintenance and need to know which filter should be replaced and how to identify the correct replacement.",
+      "top1_relevant": true,
+      "top3_relevant": true,
+      "results": [
+        {
+          "rank": 1,
+          "distance": 0.5843732357025146,
+          "source": "english---hs-series-service-manual---2001.pdf",
+          "start_page": 374,
+          "end_page": 381,
+          "section": "TSC COOLANT",
+          "relevant": true,
+          "matched_groups": 2
+        },
+        {
+          "rank": 2,
+          "distance": 0.6177572011947632,
+          "source": "english---hs-series-service-manual---2001.pdf",
+          "start_page": 371,
+          "end_page": 374,
+          "section": "MAINTENANCE",
+          "relevant": true,
+          "matched_groups": 2
+        },
+        {
+          "rank": 3,
+          "distance": 0.6998918056488037,
+          "source": "VF-Series_Service_Manual_96-8100_English_January_15_1996.pdf",
+          "start_page": 110,
+          "end_page": 113,
+          "section": "INSTALLATION -",
+          "relevant": false,
+          "matched_groups": 0
+        }
+      ]
+    },
+    {
+      "id": "C05",
+      "category": "Maintenance & Parts",
+      "query": "The coolant flow is abnormal during machining and it keeps interrupting production. What should I check?",
+      "top1_relevant": true,
+      "top3_relevant": true,
+      "results": [
+        {
+          "rank": 1,
+          "distance": 0.5608059167861938,
+          "source": "english---hs-series-service-manual---2001.pdf",
+          "start_page": 42,
+          "end_page": 45,
+          "section": "TROUBLESHOOTING",
+          "relevant": true,
+          "matched_groups": 2
+        },
+        {
+          "rank": 2,
+          "distance": 0.571940004825592,
+          "source": "english---hs-series-service-manual---2001.pdf",
+          "start_page": 39,
+          "end_page": 42,
+          "section": "COOLANT OVERFLOW",
+          "relevant": true,
+          "matched_groups": 2
+        },
+        {
+          "rank": 3,
+          "distance": 0.5995107889175415,
+          "source": "VF-Series_Service_Manual_96-8100_English_January_15_1996.pdf",
+          "start_page": 21,
+          "end_page": 25,
+          "section": "ALARMS",
+          "relevant": true,
+          "matched_groups": 2
+        }
+      ]
+    },
+    {
+      "id": "C06",
+      "category": "Maintenance & Parts",
+      "query": "A maintenance component needs to be replaced. How can I confirm the correct replacement part and documentation?",
+      "top1_relevant": false,
+      "top3_relevant": false,
+      "results": [
+        {
+          "rank": 1,
+          "distance": 0.7099303007125854,
+          "source": "english---hs-series-service-manual---2001.pdf",
+          "start_page": 219,
+          "end_page": 221,
+          "section": "Unknown",
+          "relevant": false,
+          "matched_groups": 2
+        },
+        {
+          "rank": 2,
+          "distance": 0.7141079902648926,
+          "source": "english---hs-series-service-manual---2001.pdf",
+          "start_page": 160,
+          "end_page": 163,
+          "section": "Unknown",
+          "relevant": false,
+          "matched_groups": 2
+        },
+        {
+          "rank": 3,
+          "distance": 0.7177686095237732,
+          "source": "english---hs-series-service-manual---2001.pdf",
+          "start_page": 111,
+          "end_page": 116,
+          "section": "INSTALLATION-",
+          "relevant": false,
+          "matched_groups": 2
+        }
+      ]
+    },
+    {
+      "id": "C07",
+      "category": "Technical Troubleshooting",
+      "query": "The spindle keeps giving me overload warnings during machining. What should I check?",
+      "top1_relevant": true,
+      "top3_relevant": true,
+      "results": [
+        {
+          "rank": 1,
+          "distance": 0.5247920751571655,
+          "source": "english---hs-series-service-manual---2001.pdf",
+          "start_page": 14,
+          "end_page": 15,
+          "section": " Does the spindle turn freely by hand?",
+          "relevant": true,
+          "matched_groups": 3
+        },
+        {
+          "rank": 2,
+          "distance": 0.5610893964767456,
+          "source": "english---hs-series-service-manual---2001.pdf",
+          "start_page": 11,
+          "end_page": 14,
+          "section": "temperature of the spindle.",
+          "relevant": false,
+          "matched_groups": 2
+        },
+        {
+          "rank": 3,
+          "distance": 0.5665927529335022,
+          "source": "VF-Series_Service_Manual_96-8100_English_January_15_1996.pdf",
+          "start_page": 7,
+          "end_page": 9,
+          "section": "2.7 TOOLS STICKING IN TAPER",
+          "relevant": true,
+          "matched_groups": 3
+        }
+      ]
+    },
+    {
+      "id": "C08",
+      "category": "Technical Troubleshooting",
+      "query": "A machine error that was previously fixed has returned. What troubleshooting steps should I perform?",
+      "top1_relevant": true,
+      "top3_relevant": true,
+      "results": [
+        {
+          "rank": 1,
+          "distance": 0.572475254535675,
+          "source": "english---hs-series-service-manual---2001.pdf",
+          "start_page": 20,
+          "end_page": 22,
+          "section": "TROUBLESHOOTING",
+          "relevant": true,
+          "matched_groups": 2
+        },
+        {
+          "rank": 2,
+          "distance": 0.5944420099258423,
+          "source": "english---hs-series-service-manual---2001.pdf",
+          "start_page": 49,
+          "end_page": 50,
+          "section": "alarms or cycle power to the machine.",
+          "relevant": true,
+          "matched_groups": 2
+        },
+        {
+          "rank": 3,
+          "distance": 0.6237710118293762,
+          "source": "english---hs-series-service-manual---2001.pdf",
+          "start_page": 17,
+          "end_page": 19,
+          "section": "motor assembly (\"Axis Motor Removal/Installation\" section).",
+          "relevant": true,
+          "matched_groups": 2
+        }
+      ]
+    },
+    {
+      "id": "C09",
+      "category": "Technical Troubleshooting",
+      "query": "A machine communication error appeared after the computer was replaced. What should I check?",
+      "top1_relevant": true,
+      "top3_relevant": true,
+      "results": [
+        {
+          "rank": 1,
+          "distance": 0.6387979984283447,
+          "source": "english---hs-series-service-manual---2001.pdf",
+          "start_page": 53,
+          "end_page": 56,
+          "section": "This alarm will also be generated if there is a low pressure",
+          "relevant": true,
+          "matched_groups": 2
+        },
+        {
+          "rank": 2,
+          "distance": 0.646683931350708,
+          "source": "english---hs-series-service-manual---2001.pdf",
+          "start_page": 50,
+          "end_page": 53,
+          "section": "TROUBLESHOOTING",
+          "relevant": true,
+          "matched_groups": 2
+        },
+        {
+          "rank": 3,
+          "distance": 0.6866783499717712,
+          "source": "english---hs-series-service-manual---2001.pdf",
+          "start_page": 49,
+          "end_page": 50,
+          "section": "alarms or cycle power to the machine.",
+          "relevant": true,
+          "matched_groups": 2
+        }
+      ]
+    },
+    {
+      "id": "C10",
+      "category": "Technical Troubleshooting",
+      "query": "The machining results became inconsistent after installing a replacement tool. What should I check?",
+      "top1_relevant": true,
+      "top3_relevant": true,
+      "results": [
+        {
+          "rank": 1,
+          "distance": 0.6021625995635986,
+          "source": "english---hs-series-service-manual---2001.pdf",
+          "start_page": 35,
+          "end_page": 37,
+          "section": "500 Series Swapping new tool with spindle tool",
+          "relevant": true,
+          "matched_groups": 3
+        },
+        {
+          "rank": 2,
+          "distance": 0.6246860027313232,
+          "source": "english---hs-series-service-manual---2001.pdf",
+          "start_page": 17,
+          "end_page": 19,
+          "section": "motor assembly (\"Axis Motor Removal/Installation\" section).",
+          "relevant": false,
+          "matched_groups": 2
+        },
+        {
+          "rank": 3,
+          "distance": 0.6444770097732544,
+          "source": "VF-Series_Service_Manual_96-8100_English_January_15_1996.pdf",
+          "start_page": 103,
+          "end_page": 108,
+          "section": "10. Test the tool changer for proper operation.",
+          "relevant": false,
+          "matched_groups": 1
+        }
+      ]
+    }
+  ]
+}
