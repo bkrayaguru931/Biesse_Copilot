@@ -38,6 +38,7 @@ The AI acts as an assistant to the human support engineer and does not autonomou
 - Gemini-based grounded suggestion generation
 - Browser-based dashboard
 - Retrieval evaluation on 10 representative queries
+- Feedback driven RAG improvements
 - End-to-end local POC demo
 
 ### Remaining
@@ -45,12 +46,12 @@ The AI acts as an assistant to the human support engineer and does not autonomou
 - Integration with authorized Biesse technical documentation
 - Larger manually labelled RAG evaluation set
 - Production-grade telephony/audio integration
-- Authentication and authorization
 - Production deployment infrastructure
 - Monitoring and observability
 - Production-grade rate limiting/retry handling
 
 ## 5. Architecture
+<img width="705" height="503" alt="image" src="https://github.com/user-attachments/assets/c3d21933-98a2-435c-9b4e-47191ef10aed" />
 
 Audio
 → WASAPI Loopback
