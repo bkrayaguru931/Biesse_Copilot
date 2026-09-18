@@ -1,4 +1,5 @@
 # Biesse AI Support Copilot
+<img width="1361" height="669" alt="Screenshot 2026-09-15 015227" src="https://github.com/user-attachments/assets/1d6fd6dd-4590-47b9-bb8c-fafd371463a1" />
 
 ## 1. Statement of Work
 
