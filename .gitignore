@@ -25,6 +25,9 @@ logs/
 # Runtime/generated files
 knowledge_base/chroma_db/
 biesse_conversation_dataset/transcripts/
+data/biesse_auth.db
+data/biesse_auth.db-*
+knowledge_base/processed/recommendation_feedback.jsonl
 
 # Temporary files
 tmp/
@@ -32,3 +35,4 @@ temp/
 *.tmp
 
 loopback_test.wav
+git restore --staged "knowledge_base/processed/embeddings_backup_20260908_120420.jsonl"

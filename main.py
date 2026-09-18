@@ -26,17 +26,24 @@ No call audio is written to disk by this server.
 from __future__ import annotations
 
 import json
+import hashlib
 import mimetypes
 import os
 import queue
+import re
+import secrets
+import sqlite3
 import struct
 import threading
 import time
+import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qs, urlparse
 
 import pyaudiowpatch as pyaudio
+import bcrypt
 from dotenv import load_dotenv
 
 from assemblyai.streaming.v3 import (
@@ -63,6 +70,9 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 
 API_HOST = "127.0.0.1"
 API_PORT = 8765
+FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://127.0.0.1:5500")
+AUTH_DB_PATH = PROJECT_ROOT / "data" / "biesse_auth.db"
+SESSION_TTL_SECONDS = 60 * 60 * 12
 
 SAMPLE_RATE = 16000
 CHANNELS = 1
@@ -119,6 +129,8 @@ class RuntimeState:
         self.analysis_timer = None
         self.analysis_pending = False
         self.analysis_debounce_seconds = 4.0
+        self.analysis_retry_count = 0
+        self.max_analysis_retries = 3
 
         self.client = None
         self.collector = None
@@ -130,9 +142,177 @@ class RuntimeState:
         self.call_started_at = None
 
         self.subscribers: list[queue.Queue] = []
+        self.suggestion_contexts: dict[str, dict[str, Any]] = {}
 
 
 STATE = RuntimeState()
+
+
+# =============================================================================
+# Local authentication
+# =============================================================================
+
+AUTH_LOCK = threading.Lock()
+EMAIL_PATTERN = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+
+
+def initialize_auth_db() -> None:
+    """Create the small local account store used by this demonstration app."""
+    AUTH_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(AUTH_DB_PATH) as connection:
+        connection.executescript(
+            """
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+                password_hash BLOB NOT NULL,
+                created_at INTEGER NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS sessions (
+                token_hash TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                expires_at INTEGER NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS sessions_expiry_idx ON sessions(expires_at);
+            CREATE TABLE IF NOT EXISTS recommendation_feedback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                suggestion_id TEXT NOT NULL,
+                user_id INTEGER NOT NULL,
+                document_key TEXT NOT NULL,
+                source TEXT NOT NULL,
+                rating INTEGER NOT NULL CHECK (rating IN (-1, 1)),
+                conversation TEXT NOT NULL,
+                suggestion_json TEXT NOT NULL,
+                created_at INTEGER NOT NULL,
+                UNIQUE(suggestion_id, user_id),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS feedback_document_idx
+                ON recommendation_feedback(document_key);
+            """
+        )
+
+
+def create_user(name: str, email: str, password: str) -> dict[str, Any]:
+    name = name.strip()
+    email = email.strip().lower()
+    if not 2 <= len(name) <= 80:
+        raise ValueError("Name must be between 2 and 80 characters.")
+    if not EMAIL_PATTERN.fullmatch(email):
+        raise ValueError("Enter a valid email address.")
+    if len(password) < 10:
+        raise ValueError("Password must contain at least 10 characters.")
+    if len(password) > 128 or len(password.encode("utf-8")) > 72:
+        raise ValueError("Password must be 72 bytes or fewer.")
+
+    password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+    try:
+        with AUTH_LOCK, sqlite3.connect(AUTH_DB_PATH) as connection:
+            cursor = connection.execute(
+                "INSERT INTO users (name, email, password_hash, created_at) VALUES (?, ?, ?, ?)",
+                (name, email, password_hash, int(time.time())),
+            )
+            user_id = cursor.lastrowid
+    except sqlite3.IntegrityError as error:
+        raise ValueError("An account with that email already exists.") from error
+    return {"id": user_id, "name": name, "email": email}
+
+
+def authenticate_user(email: str, password: str) -> dict[str, Any] | None:
+    email = email.strip().lower()
+    with AUTH_LOCK, sqlite3.connect(AUTH_DB_PATH) as connection:
+        row = connection.execute(
+            "SELECT id, name, email, password_hash FROM users WHERE email = ?", (email,)
+        ).fetchone()
+    if row is None or not bcrypt.checkpw(password.encode("utf-8"), row[3]):
+        return None
+    return {"id": row[0], "name": row[1], "email": row[2]}
+
+
+def create_session(user_id: int) -> str:
+    token = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    expires_at = int(time.time()) + SESSION_TTL_SECONDS
+    with AUTH_LOCK, sqlite3.connect(AUTH_DB_PATH) as connection:
+        connection.execute("DELETE FROM sessions WHERE expires_at <= ?", (int(time.time()),))
+        connection.execute(
+            "INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, ?)",
+            (token_hash, user_id, expires_at),
+        )
+    return token
+
+
+def get_session_user(token: str | None) -> dict[str, Any] | None:
+    if not token:
+        return None
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    with AUTH_LOCK, sqlite3.connect(AUTH_DB_PATH) as connection:
+        row = connection.execute(
+            """
+            SELECT users.id, users.name, users.email
+            FROM sessions JOIN users ON users.id = sessions.user_id
+            WHERE sessions.token_hash = ? AND sessions.expires_at > ?
+            """,
+            (token_hash, int(time.time())),
+        ).fetchone()
+    return None if row is None else {"id": row[0], "name": row[1], "email": row[2]}
+
+
+def delete_session(token: str | None) -> None:
+    if not token:
+        return
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    with AUTH_LOCK, sqlite3.connect(AUTH_DB_PATH) as connection:
+        connection.execute("DELETE FROM sessions WHERE token_hash = ?", (token_hash,))
+
+
+def document_key(document: dict[str, Any]) -> str:
+    metadata = document.get("metadata", {})
+    identity = "|".join(
+        str(metadata.get(field, ""))
+        for field in ("source", "start_page", "end_page", "section")
+    )
+    identity += "|" + document.get("text", "")[:300]
+    return hashlib.sha256(identity.encode("utf-8")).hexdigest()
+
+
+def feedback_scores(document_keys: list[str]) -> dict[str, float]:
+    """Return conservative feedback signals only after three independent votes."""
+    if not document_keys:
+        return {}
+    placeholders = ", ".join("?" for _ in document_keys)
+    with AUTH_LOCK, sqlite3.connect(AUTH_DB_PATH) as connection:
+        rows = connection.execute(
+            f"""
+            SELECT document_key, COUNT(*), SUM(rating)
+            FROM recommendation_feedback
+            WHERE document_key IN ({placeholders})
+            GROUP BY document_key
+            HAVING COUNT(*) >= 3
+            """,
+            document_keys,
+        ).fetchall()
+    return {key: max(-1.0, min(1.0, total / count)) for key, count, total in rows}
+
+
+def store_feedback(user_id: int, suggestion_id: str, rating: int) -> bool:
+    with STATE.lock:
+        context = STATE.suggestion_contexts.get(suggestion_id)
+    if context is None:
+        raise ValueError("That recommendation is no longer available. Generate a new one and try again.")
+    with AUTH_LOCK, sqlite3.connect(AUTH_DB_PATH) as connection:
+        cursor = connection.execute(
+            """
+            INSERT OR IGNORE INTO recommendation_feedback
+            (suggestion_id, user_id, document_key, source, rating, conversation, suggestion_json, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (suggestion_id, user_id, context["document_key"], context["source"], rating,
+             context["conversation"], json.dumps(context["suggestion"]), int(time.time())),
+        )
+    return cursor.rowcount > 0
 
 
 # =============================================================================
@@ -306,9 +486,11 @@ def rag_search(
 
     embedding = embed_query(query)
 
+    # Retrieve extra candidates first. Feedback is used only as a small,
+    # evidence-based reranking signal; semantic similarity remains primary.
     result = collection.query(
         query_embeddings=[embedding],
-        n_results=top_k,
+        n_results=top_k * 3,
         include=[
             "documents",
             "metadatas",
@@ -353,7 +535,17 @@ def rag_search(
             "distance": distance,
         })
 
-    return documents
+    scores = feedback_scores([document_key(document) for document in documents])
+    for document in documents:
+        score = scores.get(document_key(document), 0.0)
+        document["feedback_score"] = score
+        distance = document.get("distance")
+        # Chroma distances are lower-is-better. Cap feedback influence so a
+        # historically popular result cannot override a clearly better match.
+        document["reranked_distance"] = (distance if distance is not None else float("inf")) - (0.12 * score)
+
+    documents.sort(key=lambda document: document["reranked_distance"])
+    return documents[:top_k]
 
 
 # =============================================================================
@@ -650,14 +842,11 @@ def run_scheduled_ai_analysis():
         if STATE.ai_processing:
             print(
                 "[AI] Analysis already running. "
-                "Keeping latest conversation pending."
+                "Latest conversation will run when it completes."
             )
-            STATE.analysis_timer = threading.Timer(
-                1.0,
-                run_scheduled_ai_analysis,
-            )
-            STATE.analysis_timer.daemon = True
-            STATE.analysis_timer.start()
+            # The active cycle's finally block sees analysis_pending and
+            # schedules exactly one follow-up. Polling here created a stream
+            # of redundant timers and noisy logs while generation was slow.
             return
 
         # Respect the 30-second Gemini generate_content cooldown.
@@ -722,9 +911,13 @@ def _run_ai_analysis():
     # -------------------------------------------------------------------------
     try:
         analysis = analyze_conversation(text)
+        if not isinstance(analysis, dict):
+            raise ValueError("Gemini analysis response was not a JSON object.")
 
         sentiment = analysis.get("sentiment", {})
         category = analysis.get("category", {})
+        sentiment = sentiment if isinstance(sentiment, dict) else {}
+        category = category if isinstance(category, dict) else {}
 
         sentiment_payload = {
             "label": sentiment.get("label", "Neutral"),
@@ -751,12 +944,37 @@ def _run_ai_analysis():
             "category": category_payload,
         })
 
+        with STATE.lock:
+            STATE.analysis_retry_count = 0
+
     except Exception as error:
-        print("Analysis error:", error)
-        publish({
-            "type": "error",
-            "message": f"Analysis failed: {error}",
-        })
+        is_temporary_provider_error = (
+            getattr(error, "code", None) in (429, 500, 502, 503, 504)
+            or any(code in str(error) for code in ("429", "500", "502", "503", "504"))
+        )
+        with STATE.lock:
+            if (
+                is_temporary_provider_error
+                and STATE.analysis_retry_count < STATE.max_analysis_retries
+                and STATE.running
+            ):
+                STATE.analysis_retry_count += 1
+                STATE.analysis_pending = True
+                retry_number = STATE.analysis_retry_count
+            else:
+                retry_number = 0
+
+        if retry_number:
+            print(
+                "[AI] Gemini is temporarily unavailable. "
+                f"Retry {retry_number}/{STATE.max_analysis_retries} will run after the cooldown."
+            )
+        else:
+            print("Analysis error:", error)
+            publish({
+                "type": "error",
+                "message": "Conversation analysis is temporarily unavailable. Suggestions will continue.",
+            })
         # Continue to RAG. Sentiment/category failure should not
         # prevent a technical suggestion from being generated.
         print("[AI] Continuing to RAG despite analysis failure.")
@@ -785,6 +1003,15 @@ def _run_ai_analysis():
             conversation_text=text,
             documents=documents,
         )
+        if not isinstance(suggestion, dict):
+            raise ValueError("Gemini suggestion response was not a JSON object.")
+        suggestion = {
+            "summary": str(suggestion.get("summary", "")),
+            "actions": [str(item) for item in suggestion.get("actions", [])][:5]
+                if isinstance(suggestion.get("actions"), list) else [],
+            "questions": [str(item) for item in suggestion.get("questions", [])][:5]
+                if isinstance(suggestion.get("questions"), list) else [],
+        }
 
         latency = time.perf_counter() - started
 
@@ -806,8 +1033,22 @@ def _run_ai_analysis():
         else:
             pages = ""
 
+        suggestion_id = str(uuid.uuid4())
+        with STATE.lock:
+            STATE.suggestion_contexts[suggestion_id] = {
+                "document_key": document_key(top_document),
+                "source": source,
+                "conversation": text,
+                "suggestion": suggestion,
+            }
+            # Keep only the most recent recommendations in memory. Feedback is
+            # persisted separately, so expired UI actions do not grow memory.
+            while len(STATE.suggestion_contexts) > 100:
+                STATE.suggestion_contexts.pop(next(iter(STATE.suggestion_contexts)))
+
         publish({
             "type": "suggestion",
+            "suggestion_id": suggestion_id,
             "summary": suggestion.get("summary", ""),
             "actions": suggestion.get("actions", []),
             "questions": suggestion.get("questions", []),
@@ -1470,6 +1711,18 @@ def run_live_session():
 # HTTP server
 # =============================================================================
 
+class CopilotHTTPServer(ThreadingHTTPServer):
+    """Avoid noisy tracebacks when a browser closes an SSE connection."""
+
+    def handle_error(self, request, client_address):
+        import sys
+
+        error_type, error, _ = sys.exc_info()
+        if error_type is ConnectionAbortedError or isinstance(error, ConnectionAbortedError):
+            return
+        super().handle_error(request, client_address)
+
+
 class Handler(BaseHTTPRequestHandler):
 
     def log_message(
@@ -1480,22 +1733,17 @@ class Handler(BaseHTTPRequestHandler):
         # Keep the terminal clean.
         return
 
-    def _headers(
-        self,
-        content_type="application/json",
-    ):
-
-        self.send_response(200)
+    def _headers(self, content_type="application/json", status=200):
+        self.send_response(status)
 
         self.send_header(
             "Content-Type",
             content_type,
         )
 
-        self.send_header(
-            "Access-Control-Allow-Origin",
-            "*",
-        )
+        origin = self.headers.get("Origin")
+        if origin == FRONTEND_ORIGIN:
+            self.send_header("Access-Control-Allow-Origin", origin)
 
         self.send_header(
             "Access-Control-Allow-Methods",
@@ -1504,7 +1752,7 @@ class Handler(BaseHTTPRequestHandler):
 
         self.send_header(
             "Access-Control-Allow-Headers",
-            "Content-Type",
+            "Content-Type, Authorization",
         )
 
         self.send_header(
@@ -1514,13 +1762,50 @@ class Handler(BaseHTTPRequestHandler):
 
         self.end_headers()
 
+    def _json(self, payload: dict[str, Any], status=200):
+        self._headers(status=status)
+        self.wfile.write(json.dumps(payload).encode("utf-8"))
+
+    def _request_json(self) -> dict[str, Any]:
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError as error:
+            raise ValueError("Invalid request body.") from error
+        if length <= 0 or length > 16_384:
+            raise ValueError("Request body is missing or too large.")
+        try:
+            body = self.rfile.read(length)
+            payload = json.loads(body.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise ValueError("Request body must be valid JSON.") from error
+        if not isinstance(payload, dict):
+            raise ValueError("Request body must be a JSON object.")
+        return payload
+
+    def _token(self) -> str | None:
+        authorization = self.headers.get("Authorization", "")
+        if authorization.startswith("Bearer "):
+            return authorization[7:].strip()
+        return parse_qs(urlparse(self.path).query).get("token", [None])[0]
+
+    def _current_user(self) -> dict[str, Any] | None:
+        return get_session_user(self._token())
+
+    def _require_user(self) -> dict[str, Any] | None:
+        user = self._current_user()
+        if user is None:
+            self._json({"message": "Authentication is required."}, status=401)
+        return user
+
     def do_OPTIONS(self):
 
         self._headers()
 
     def do_GET(self):
 
-        if self.path == "/health":
+        request_path = urlparse(self.path).path
+
+        if request_path == "/health":
 
             self._headers()
 
@@ -1545,7 +1830,16 @@ class Handler(BaseHTTPRequestHandler):
 
             return
 
-        if self.path == "/demo-audio":
+        if request_path == "/me":
+            user = self._require_user()
+            if user is not None:
+                self._json({"user": user})
+            return
+
+        if request_path in ("/demo-audio", "/events") and self._require_user() is None:
+            return
+
+        if request_path == "/demo-audio":
 
             try:
                 audio_path = get_demo_audio_path()
@@ -1554,21 +1848,25 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-Type", "audio/wav")
                 self.send_header("Content-Length", str(len(data)))
-                self.send_header("Access-Control-Allow-Origin", "*")
+                origin = self.headers.get("Origin")
+                if origin == FRONTEND_ORIGIN:
+                    self.send_header("Access-Control-Allow-Origin", origin)
                 self.send_header("Cache-Control", "no-cache")
                 self.end_headers()
                 self.wfile.write(data)
             except Exception as error:
                 self.send_response(404)
                 self.send_header("Content-Type", "application/json")
-                self.send_header("Access-Control-Allow-Origin", "*")
+                origin = self.headers.get("Origin")
+                if origin == FRONTEND_ORIGIN:
+                    self.send_header("Access-Control-Allow-Origin", origin)
                 self.end_headers()
                 self.wfile.write(json.dumps({
                     "error": str(error)
                 }).encode("utf-8"))
             return
 
-        if self.path == "/events":
+        if request_path == "/events":
 
             self.send_response(200)
 
@@ -1587,10 +1885,9 @@ class Handler(BaseHTTPRequestHandler):
                 "keep-alive",
             )
 
-            self.send_header(
-                "Access-Control-Allow-Origin",
-                "*",
-            )
+            origin = self.headers.get("Origin")
+            if origin == FRONTEND_ORIGIN:
+                self.send_header("Access-Control-Allow-Origin", origin)
 
             self.end_headers()
 
@@ -1663,7 +1960,49 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
 
-        if self.path not in (
+        request_path = urlparse(self.path).path
+
+        if request_path in ("/auth/signup", "/auth/login"):
+            try:
+                payload = self._request_json()
+                email = str(payload.get("email", ""))
+                password = str(payload.get("password", ""))
+                if request_path == "/auth/signup":
+                    user = create_user(str(payload.get("name", "")), email, password)
+                else:
+                    user = authenticate_user(email, password)
+                    if user is None:
+                        self._json({"message": "Invalid email or password."}, status=401)
+                        return
+                self._json({"user": user, "token": create_session(user["id"])}, status=201 if request_path.endswith("signup") else 200)
+            except ValueError as error:
+                self._json({"message": str(error)}, status=400)
+            return
+
+        if request_path == "/auth/logout":
+            if self._require_user() is not None:
+                delete_session(self._token())
+                self._json({"status": "logged_out"})
+            return
+
+        if request_path == "/feedback":
+            user = self._require_user()
+            if user is None:
+                return
+            try:
+                payload = self._request_json()
+                rating_name = payload.get("rating")
+                rating = {"helpful": 1, "not_helpful": -1}.get(rating_name)
+                suggestion_id = str(payload.get("suggestion_id", ""))
+                if rating is None or not suggestion_id:
+                    raise ValueError("A recommendation and valid rating are required.")
+                saved = store_feedback(user["id"], suggestion_id, rating)
+                self._json({"status": "saved" if saved else "already_recorded"})
+            except ValueError as error:
+                self._json({"message": str(error)}, status=400)
+            return
+
+        if request_path not in (
             "/start",
             "/stop",
         ):
@@ -1672,7 +2011,10 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             return
 
-        if self.path == "/start":
+        if self._require_user() is None:
+            return
+
+        if request_path == "/start":
 
             with STATE.lock:
 
@@ -1694,9 +2036,11 @@ class Handler(BaseHTTPRequestHandler):
 
                 STATE.turns = []
                 STATE.turn_counter = 0
+                STATE.suggestion_contexts = {}
                 STATE.last_ai_analysis_at = 0.0
                 STATE.ai_processing = False
                 STATE.analysis_pending = False
+                STATE.analysis_retry_count = 0
 
                 if STATE.analysis_timer is not None:
                     STATE.analysis_timer.cancel()
@@ -1816,6 +2160,8 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
 
+    initialize_auth_db()
+
     print()
     print("=" * 80)
     print("BIESSE AI SUPPORT COPILOT")
@@ -1828,7 +2174,7 @@ def main():
         "Frontend:"
     )
     print(
-        "  http://127.0.0.1:5500/audio/frontend/index.html"
+        "  http://127.0.0.1:5500/frontend/index.html"
     )
     print()
     print(
@@ -1860,7 +2206,7 @@ def main():
     )
     print()
 
-    server = ThreadingHTTPServer(
+    server = CopilotHTTPServer(
         (
             API_HOST,
             API_PORT,

@@ -109,3 +109,46 @@ The knowledge base currently contains:
 
 ```bash
 python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+Copy `.env.example` to `.env`, then supply valid Gemini and AssemblyAI keys.
+
+### Run
+
+Start the API server:
+
+```bash
+python main.py
+```
+
+Serve the project directory with VS Code Live Server (or another local static
+server) at `http://127.0.0.1:5500`, then open:
+
+```text
+http://127.0.0.1:5500/frontend/index.html
+```
+
+The first visit displays a sign-up/login screen. Accounts are stored locally in
+`data/biesse_auth.db`; passwords are hashed with bcrypt and active sessions
+expire after 12 hours. This local account store is appropriate for the POC,
+not a production identity provider. If the static server uses a different
+origin, set `FRONTEND_ORIGIN` in `.env` to that exact origin.
+
+## 10. Recommendation feedback loop
+
+The Helpful / Not helpful buttons save the reviewed recommendation, its source,
+and the conversation context locally. After at least three ratings for the same
+document chunk, the RAG pipeline applies a small feedback-based reranking
+signal; semantic relevance remains the primary ranking factor.
+
+Export data for manual review or offline evaluation with:
+
+```bash
+python rag/export_feedback_dataset.py --helpful-only
+```
+
+Do not train directly from raw ratings. Review the exported records, remove
+sensitive call content, and use a held-out evaluation set before promoting any
+changes to production.

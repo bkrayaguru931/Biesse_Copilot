@@ -171,11 +171,13 @@
   @keyframes appear{ to{ opacity:1; transform:translateY(0); } }
   .turn.customer{ align-self:flex-start; align-items:flex-start; }
   .turn.agent{ align-self:flex-end; align-items:flex-end; }
+  .turn.unknown{ align-self:flex-start; align-items:flex-start; }
   .turn .meta{ font-size:10px; color:var(--ink-faint); margin-bottom:3px; display:flex; gap:6px; align-items:center; }
   .turn .meta .speaker{ font-weight:600; color:var(--ink-muted); }
   .bubble{ padding:8px 10px; border-radius:10px; font-size:12.5px; line-height:1.45; }
   .turn.customer .bubble{ background:#EFF1EA; border:1px solid var(--line); border-top-left-radius:3px; color:var(--ink); }
   .turn.agent .bubble{ background:var(--blueprint-wash-a); border:1px solid #CFE1E6; border-top-right-radius:3px; color:var(--blueprint-dark); }
+  .turn.unknown .bubble{ background:#F7F8F4; border:1px dashed var(--line); color:var(--ink-muted); }
 
   .thinking-row{
     display:none; align-items:center; gap:6px;
@@ -402,9 +404,30 @@
     *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
   }
 
+  .auth-screen{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px;background:rgba(15,35,32,.52);backdrop-filter:blur(8px);}
+  .auth-card{width:min(100%,430px);padding:32px;border-radius:16px;background:#fff;box-shadow:0 24px 70px rgba(10,35,32,.28);}
+  .auth-card h1{margin:0 0 6px;font-size:25px;}.auth-card p{margin:0 0 22px;color:var(--ink-muted);}
+  .auth-tabs{display:flex;gap:8px;border-bottom:1px solid var(--line);margin-bottom:18px;}.auth-tab{border:0;background:none;padding:9px 12px;color:var(--ink-muted);font-weight:600;}.auth-tab.active{color:var(--blueprint);border-bottom:2px solid var(--blueprint);}
+  .auth-form{display:grid;gap:14px;}.auth-form label{font-size:13px;font-weight:600;display:grid;gap:5px;}.auth-form input{padding:10px 11px;border:1px solid var(--line);border-radius:7px;font:inherit;}.auth-submit{border:0;border-radius:7px;padding:11px;background:var(--blueprint);color:#fff;font:600 14px inherit;}.auth-error{min-height:20px;margin:0;color:var(--brick);font-size:13px;}.auth-hidden{display:none!important;}
+  .account-menu{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-muted);}.signout-btn{border:1px solid var(--line);background:#fff;border-radius:16px;padding:5px 9px;color:var(--ink-muted);font:inherit;font-size:12px;}
+
 </style>
 </head>
 <body>
+<section class="auth-screen" id="authScreen" aria-labelledby="authTitle">
+  <div class="auth-card">
+    <h1 id="authTitle">Biesse Support Copilot</h1>
+    <p>Sign in to access the agent console.</p>
+    <div class="auth-tabs" role="tablist"><button class="auth-tab active" type="button" data-mode="login">Log in</button><button class="auth-tab" type="button" data-mode="signup">Create account</button></div>
+    <form class="auth-form" id="authForm">
+      <label id="nameField" class="auth-hidden">Name<input id="authName" autocomplete="name" maxlength="80"></label>
+      <label>Email<input id="authEmail" type="email" autocomplete="email" required></label>
+      <label>Password<input id="authPassword" type="password" autocomplete="current-password" minlength="10" maxlength="128" required></label>
+      <p class="auth-error" id="authError" aria-live="polite"></p>
+      <button class="auth-submit" id="authSubmit" type="submit">Log in</button>
+    </form>
+  </div>
+</section>
 <header class="console-header">
   <div class="brand">
     <div class="mark">BIESSE <span>Copilot</span></div>
@@ -424,6 +447,7 @@
     <div class="item"><span class="led"></span>Knowledge base</div>
     <div class="item"><span class="led"></span>AI suggestions</div>
   </div>
+  <div class="account-menu auth-hidden" id="accountMenu"><span id="accountName"></span><button class="signout-btn" id="signoutBtn" type="button">Sign out</button></div>
 </header>
 
 <main class="console">
@@ -526,6 +550,7 @@
 
         <div class="suggestion-foot">
           <span class="latency" id="sugLatency"></span>
+          <span class="latency" id="feedbackStatus" aria-live="polite"></span>
           <div class="fb-btns">
             <button class="fb-btn" id="fbUp">▲ Helpful</button>
             <button class="fb-btn" id="fbDown">▼ Not helpful</button>
@@ -552,11 +577,13 @@
 (function(){
 
   const API_BASE = 'http://127.0.0.1:8765';
+  let authToken = sessionStorage.getItem('biesse_auth_token');
+  let authMode = 'login';
 
   // Demo call audio is served by the local Python backend.
   // The browser plays it through the normal Windows playback device,
   // and WASAPI loopback captures that playback for AssemblyAI.
-  const demoAudio = new Audio(API_BASE + '/demo-audio');
+  const demoAudio = new Audio();
   demoAudio.preload = 'auto';
 
   const transcriptEl = document.getElementById('transcript');
@@ -573,6 +600,56 @@
   let callTimer = null;
   let running = false;
   let turnCount = 0;
+  let latestSuggestionId = null;
+  let feedbackSubmitted = false;
+
+  function authFetch(path, options = {}){
+    const headers = new Headers(options.headers || {});
+    if (authToken) headers.set('Authorization', 'Bearer ' + authToken);
+    return fetch(API_BASE + path, {...options, headers});
+  }
+
+  async function authenticationErrorMessage(error){
+    if (error instanceof TypeError && /fetch/i.test(error.message)) {
+      try {
+        const health = await fetch(API_BASE + '/health');
+        if (health.ok) {
+          return 'The server is reachable, but this page is not an allowed origin. Set FRONTEND_ORIGIN in .env to ' + window.location.origin + ' and restart the server.';
+        }
+      } catch (_) {
+        return 'Cannot reach the Copilot server at ' + API_BASE + '. Start it with "python main.py", then try again.';
+      }
+    }
+    return error.message || 'Unable to authenticate.';
+  }
+
+  function setAuthenticated(user){
+    document.getElementById('authScreen').classList.add('auth-hidden');
+    document.getElementById('accountMenu').classList.remove('auth-hidden');
+    document.getElementById('accountName').textContent = user.name;
+    demoAudio.src = API_BASE + '/demo-audio?token=' + encodeURIComponent(authToken);
+    connectEvents();
+  }
+
+  function setAuthMode(mode){
+    authMode = mode;
+    document.querySelectorAll('.auth-tab').forEach(button => button.classList.toggle('active', button.dataset.mode === mode));
+    document.getElementById('nameField').classList.toggle('auth-hidden', mode !== 'signup');
+    document.getElementById('authSubmit').textContent = mode === 'signup' ? 'Create account' : 'Log in';
+    document.getElementById('authPassword').autocomplete = mode === 'signup' ? 'new-password' : 'current-password';
+    document.getElementById('authError').textContent = '';
+  }
+
+  async function signOut(){
+    if (authToken) await authFetch('/auth/logout', {method:'POST'}).catch(() => {});
+    authToken = null;
+    sessionStorage.removeItem('biesse_auth_token');
+    if (eventSource) eventSource.close();
+    demoAudio.pause();
+    setRunningState(false);
+    document.getElementById('accountMenu').classList.add('auth-hidden');
+    document.getElementById('authScreen').classList.remove('auth-hidden');
+  }
 
   // ---------------------------------------------------------------------------
   // UI helpers
@@ -650,11 +727,14 @@
     document.getElementById('sugSource').textContent = '';
     document.getElementById('sugPages').textContent = '';
     document.getElementById('sugLatency').textContent = '';
+    document.getElementById('feedbackStatus').textContent = '';
 
     document.getElementById('fbUp').classList.remove('active-up');
     document.getElementById('fbDown').classList.remove('active-down');
 
     turnCount = 0;
+    latestSuggestionId = null;
+    feedbackSubmitted = false;
   }
 
   function escapeHtml(value){
@@ -667,13 +747,14 @@
   }
 
   function renderTurn(data){
-    const speaker = data.speaker === 'customer' ? 'customer' : 'agent';
-    const name = speaker === 'customer' ? 'Customer' : 'You';
+    const speaker = ['customer', 'agent'].includes(data.speaker) ? data.speaker : 'unknown';
+    const name = speaker === 'customer' ? 'Customer' : speaker === 'agent' ? 'You' : 'Speaker pending';
 
     turnCount++;
 
     const wrap = document.createElement('div');
     wrap.className = 'turn ' + speaker;
+    wrap.dataset.turnId = data.turn_id || '';
 
     let timeText = data.elapsed_seconds;
     if (typeof timeText !== 'number') timeText = callSeconds;
@@ -724,6 +805,13 @@
   }
 
   function showSuggestion(data){
+    latestSuggestionId = data.suggestion_id || null;
+    feedbackSubmitted = false;
+    document.getElementById('feedbackStatus').textContent = '';
+    document.getElementById('fbUp').classList.remove('active-up');
+    document.getElementById('fbDown').classList.remove('active-down');
+    document.getElementById('fbUp').disabled = false;
+    document.getElementById('fbDown').disabled = false;
     document.getElementById('suggestionPlaceholder').style.display = 'none';
     document.getElementById('suggestionContent').style.display = 'block';
 
@@ -777,7 +865,7 @@
       eventSource.close();
     }
 
-    eventSource = new EventSource(API_BASE + '/events');
+    eventSource = new EventSource(API_BASE + '/events?token=' + encodeURIComponent(authToken));
 
     eventSource.onopen = function(){
       console.log('Connected to Copilot backend.');
@@ -827,9 +915,12 @@
           break;
 
         case 'speaker_revision':
-          // Final speaker corrections can arrive after the conversation.
-          // For now the backend sends corrected labels as a refresh event.
-          console.log('[SPEAKER REVISION]', data);
+          const revisedTurn = document.querySelector('[data-turn-id="' + data.turn_id + '"]');
+          if (revisedTurn && ['customer', 'agent'].includes(data.speaker)) {
+            revisedTurn.classList.remove('customer', 'agent', 'unknown');
+            revisedTurn.classList.add(data.speaker);
+            revisedTurn.querySelector('.speaker').textContent = data.speaker === 'customer' ? 'Customer' : 'You';
+          }
           break;
 
         case 'error':
@@ -865,7 +956,7 @@
     try {
       await playbackPromise;
 
-      const response = await fetch(API_BASE + '/start', {
+      const response = await authFetch('/start', {
         method: 'POST'
       });
 
@@ -895,7 +986,7 @@
     demoAudio.pause();
 
     try {
-      await fetch(API_BASE + '/stop', {
+      await authFetch('/stop', {
         method: 'POST'
       });
     } catch(error){
@@ -932,19 +1023,72 @@
     }
   });
 
+  async function submitFeedback(rating){
+    if (!latestSuggestionId || feedbackSubmitted) return;
+    const status = document.getElementById('feedbackStatus');
+    try {
+      const response = await authFetch('/feedback', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({suggestion_id: latestSuggestionId, rating})
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Could not save feedback.');
+      feedbackSubmitted = true;
+      document.getElementById('fbUp').disabled = true;
+      document.getElementById('fbDown').disabled = true;
+      status.textContent = result.status === 'already_recorded'
+        ? 'Feedback already recorded.'
+        : 'Feedback saved — thank you.';
+    } catch (error) {
+      status.textContent = error.message || 'Could not save feedback.';
+    }
+  }
+
   document.getElementById('fbUp').addEventListener('click', function(){
     this.classList.add('active-up');
     document.getElementById('fbDown').classList.remove('active-down');
+    submitFeedback('helpful');
   });
 
   document.getElementById('fbDown').addEventListener('click', function(){
     this.classList.add('active-down');
     document.getElementById('fbUp').classList.remove('active-up');
+    submitFeedback('not_helpful');
   });
 
-  // Connect to backend immediately.
-  connectEvents();
   setRunningState(false);
+
+  document.querySelectorAll('.auth-tab').forEach(function(button){
+    button.addEventListener('click', function(){ setAuthMode(button.dataset.mode); });
+  });
+
+  document.getElementById('authForm').addEventListener('submit', async function(event){
+    event.preventDefault();
+    const errorEl = document.getElementById('authError');
+    const submit = document.getElementById('authSubmit');
+    errorEl.textContent = '';
+    submit.disabled = true;
+    try {
+      const payload = {email: document.getElementById('authEmail').value, password: document.getElementById('authPassword').value};
+      if (authMode === 'signup') payload.name = document.getElementById('authName').value;
+      const response = await fetch(API_BASE + '/auth/' + (authMode === 'signup' ? 'signup' : 'login'), {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Unable to authenticate.');
+      authToken = result.token;
+      sessionStorage.setItem('biesse_auth_token', authToken);
+      setAuthenticated(result.user);
+    } catch (error) { errorEl.textContent = await authenticationErrorMessage(error); }
+    finally { submit.disabled = false; }
+  });
+
+  document.getElementById('signoutBtn').addEventListener('click', signOut);
+  if (authToken) {
+    authFetch('/me').then(async response => {
+      if (!response.ok) throw new Error();
+      return response.json();
+    }).then(result => setAuthenticated(result.user)).catch(signOut);
+  }
 
 })();
 </script>
