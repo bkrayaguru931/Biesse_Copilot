@@ -1,5 +1,5 @@
 # Biesse AI Support Copilot
-<img width="950" height="444" alt="image" src="https://github.com/user-attachments/assets/d0ab4e2a-acc5-4e88-a3d5-6440154bbc44" />
+<img width="1361" height="669" alt="Screenshot 2026-09-15 015227" src="https://github.com/user-attachments/assets/fa0eac8c-11fa-4794-8461-51c48b69c8d7" />
 
 ## 1. Statement of Work
 
@@ -52,7 +52,7 @@ The AI acts as an assistant to the human support engineer and does not autonomou
 - Production-grade rate limiting/retry handling
 
 ## 5. Architecture
-<img width="705" height="503" alt="image" src="https://github.com/user-attachments/assets/c3d21933-98a2-435c-9b4e-47191ef10aed" />
+<img width="950" height="444" alt="Screenshot 2026-09-18 123601" src="https://github.com/user-attachments/assets/ffce5ff1-0c72-445a-8075-186dfbd9ac74" />
 
 Audio
 → WASAPI Loopback
